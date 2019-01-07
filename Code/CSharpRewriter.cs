@@ -47,12 +47,13 @@ namespace RoslynTool
             var symInfo = m_Model.GetSymbolInfo(node);
             var sym = symInfo.Symbol;
             if (null != sym && SymbolTable.Instance.AssemblySymbol != sym.ContainingAssembly) {
-                m_ExistCreate = true;
                 var infos = SymbolTable.Instance.GetInjectInfos(m_ProjectFileName);
-                foreach (var info in infos) {
-                    if (info.ExcludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
-                        m_ExistCreate = false;
-                        break;
+                if (m_ExistCreate) {
+                    foreach (var info in infos) {
+                        if (info.ExcludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
+                            m_ExistCreate = false;
+                            break;
+                        }
                     }
                 }
                 if (m_ExistCreate) {
