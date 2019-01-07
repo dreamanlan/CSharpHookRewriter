@@ -44,32 +44,35 @@ namespace RoslynTool
         }
         public override void VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            var symInfo = m_Model.GetSymbolInfo(node);
-            var sym = symInfo.Symbol;
-            if (null != sym && SymbolTable.Instance.AssemblySymbol != sym.ContainingAssembly) {
-                var infos = SymbolTable.Instance.GetInjectInfos(m_ProjectFileName);
-                if (m_ExistCreate) {
+            if (!m_ExistCreate) {
+                var symInfo = m_Model.GetSymbolInfo(node);
+                var sym = symInfo.Symbol;
+                if (null != sym && SymbolTable.Instance.AssemblySymbol != sym.ContainingAssembly) {
+                    bool exclude = false;
+                    var infos = SymbolTable.Instance.GetInjectInfos(m_ProjectFileName);
                     foreach (var info in infos) {
                         if (info.ExcludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
-                            m_ExistCreate = false;
+                            exclude = true;
                             break;
                         }
                     }
-                }
-                if (m_ExistCreate) {
-                    bool existInclude = false;
-                    bool include = false;
-                    foreach (var info in infos) {
-                        if (info.IncludeAssemblies.Count > 0) {
-                            existInclude = true;
+                    if (!exclude) {
+                        bool existInclude = false;
+                        bool include = false;
+                        foreach (var info in infos) {
+                            if (info.IncludeAssemblies.Count > 0) {
+                                existInclude = true;
+                            }
+                            if (info.IncludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
+                                include = true;
+                                break;
+                            }
                         }
-                        if (info.IncludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
-                            include = true;
-                            break;
+                        if (existInclude) {
+                            m_ExistCreate = include;
+                        } else {
+                            m_ExistCreate = true;
                         }
-                    }
-                    if (existInclude) {
-                        m_ExistCreate = include;
                     }
                 }
             }
