@@ -22,6 +22,8 @@ namespace RoslynTool
     {
         internal HookInfo MemoryLog = null;
         internal HookInfo ProfilerSample = null;
+        internal HashSet<string> ExcludeAssemblies = new HashSet<string>();
+        internal HashSet<string> IncludeAssemblies = new HashSet<string>();
         internal List<Regex> DontInjects = new List<Regex>();
         internal List<Regex> Injects = new List<Regex>();
     }
@@ -83,6 +85,16 @@ namespace RoslynTool
                                     injectInfo.ProfilerSample = new HookInfo { FullClassName = c, BeginMethodName = m1, EndMethodName = m2 };
                                 } else {
                                     injectInfo.ProfilerSample = new HookInfo { FullClassName = "UnityEngine.Profiling.Profiler", BeginMethodName = "BeginSample", EndMethodName = "EndSample" };
+                                }
+                            } else if (mid == "ExcludeAssembly") {
+                                var r = cd.GetParamId(0);
+                                if (!injectInfo.ExcludeAssemblies.Contains(r)) {
+                                    injectInfo.ExcludeAssemblies.Add(r);
+                                }
+                            } else if (mid == "IncludeAssembly") {
+                                var r = cd.GetParamId(0);
+                                if (!injectInfo.IncludeAssemblies.Contains(r)) {
+                                    injectInfo.IncludeAssemblies.Add(r);
                                 }
                             } else if (mid == "DontInject") {
                                 var r = cd.GetParamId(0);

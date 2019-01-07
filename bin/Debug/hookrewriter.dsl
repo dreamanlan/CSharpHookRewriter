@@ -1,6 +1,8 @@
 project("PluginFramework")
 {
 	InjectMemoryLog();
+	ExcludeAssembly("mscorlib");
+	ExcludeAssembly("System");
 	
 	DontInject("__Error.*");
 	DontInject("CsLibrary\\.Logger.*");
@@ -12,4 +14,6 @@ project("PluginFramework")
 project("Cs2LuaScript")
 {
 	InjectMemoryLog();
+	ExcludeAssembly("mscorlib");
+	ExcludeAssembly("System");
 };

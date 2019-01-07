@@ -48,16 +48,41 @@ namespace RoslynTool
             var sym = symInfo.Symbol;
             if (null != sym && SymbolTable.Instance.AssemblySymbol != sym.ContainingAssembly) {
                 m_ExistCreate = true;
+                var infos = SymbolTable.Instance.GetInjectInfos(m_ProjectFileName);
+                foreach (var info in infos) {
+                    if (info.ExcludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
+                        m_ExistCreate = false;
+                        break;
+                    }
+                }
+                if (m_ExistCreate) {
+                    bool existInclude = false;
+                    bool include = false;
+                    foreach (var info in infos) {
+                        if (info.IncludeAssemblies.Count > 0) {
+                            existInclude = true;
+                        }
+                        if (info.IncludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
+                            include = true;
+                            break;
+                        }
+                    }
+                    if (existInclude) {
+                        m_ExistCreate = include;
+                    }
+                }
             }
             base.VisitInvocationExpression(node);
         }
 
-        public CreateChecker(SemanticModel model)
+        public CreateChecker(string name, SemanticModel model)
         {
             m_Model = model;
+            m_ProjectFileName = name;
         }
 
         private SemanticModel m_Model = null;
+        private string m_ProjectFileName = string.Empty;
         private bool m_ExistCreate = false;
     }
     internal class CSharpRewriter : CSharpSyntaxRewriter
@@ -109,7 +134,7 @@ namespace RoslynTool
                         }
                         if (include) {
                             if (null != info.MemoryLog) {
-                                CreateChecker checker = new CreateChecker(m_Model);
+                                CreateChecker checker = new CreateChecker(m_ProjectFileName, m_Model);
                                 checker.Visit(node);
                                 if (checker.ExistCreate) {
                                     mlog = info.MemoryLog;
