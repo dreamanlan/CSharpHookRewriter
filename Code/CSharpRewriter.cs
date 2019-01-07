@@ -42,7 +42,22 @@ namespace RoslynTool
             m_ExistCreate = true;
             base.VisitStackAllocArrayCreationExpression(node);
         }
+        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+        {
+            var symInfo = m_Model.GetSymbolInfo(node);
+            var sym = symInfo.Symbol;
+            if (null != sym && SymbolTable.Instance.AssemblySymbol != sym.ContainingAssembly) {
+                m_ExistCreate = true;
+            }
+            base.VisitInvocationExpression(node);
+        }
 
+        public CreateChecker(SemanticModel model)
+        {
+            m_Model = model;
+        }
+
+        private SemanticModel m_Model = null;
         private bool m_ExistCreate = false;
     }
     internal class CSharpRewriter : CSharpSyntaxRewriter
@@ -94,7 +109,7 @@ namespace RoslynTool
                         }
                         if (include) {
                             if (null != info.MemoryLog) {
-                                CreateChecker checker = new CreateChecker();
+                                CreateChecker checker = new CreateChecker(m_Model);
                                 checker.Visit(node);
                                 if (checker.ExistCreate) {
                                     mlog = info.MemoryLog;
@@ -121,7 +136,7 @@ namespace RoslynTool
         private BlockSyntax InjectMemoryLog(BlockSyntax node, IMethodSymbol sym, string fullName, HookInfo hookInfo)
         {
             var firstLeading = node.GetLeadingTrivia().ToFullString();
-            var txt = node.Statements.ToFullString();
+            var txt = node.ToFullString();            
 
             int ix = 0;
             while (ix < firstLeading.Length && (firstLeading[ix] == '\t' || firstLeading[ix] == ' '))
