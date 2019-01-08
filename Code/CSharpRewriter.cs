@@ -48,13 +48,18 @@ namespace RoslynTool
                 var symInfo = m_Model.GetSymbolInfo(node);
                 var sym = symInfo.Symbol;
                 if (null != sym && SymbolTable.Instance.AssemblySymbol != sym.ContainingAssembly) {
+                    var fullName = SymbolTable.CalcFullNameWithTypeParameters(sym, true);
                     bool exclude = false;
                     var infos = SymbolTable.Instance.GetInjectInfos(m_ProjectFileName);
                     foreach (var info in infos) {
-                        if (info.ExcludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
-                            exclude = true;
-                            break;
+                        foreach (var exAssem in info.ExcludeAssemblies) {
+                            if (exAssem.IsMatch(fullName)) {
+                                exclude = true;
+                                break;
+                            }
                         }
+                        if (exclude)
+                            break;
                     }
                     if (!exclude) {
                         bool existInclude = false;
@@ -63,10 +68,14 @@ namespace RoslynTool
                             if (info.IncludeAssemblies.Count > 0) {
                                 existInclude = true;
                             }
-                            if (info.IncludeAssemblies.Contains(sym.ContainingAssembly.Name)) {
-                                include = true;
-                                break;
+                            foreach (var inAssem in info.IncludeAssemblies) {
+                                if (inAssem.IsMatch(fullName)) {
+                                    include = true;
+                                    break;
+                                }
                             }
+                            if (include)
+                                break;
                         }
                         if (existInclude) {
                             m_ExistCreate = include;
@@ -89,6 +98,19 @@ namespace RoslynTool
         private string m_ProjectFileName = string.Empty;
         private bool m_ExistCreate = false;
     }
+    internal class YieldAnalysis : CSharpSyntaxWalker
+    {
+        public int YieldCount
+        {
+            get { return m_YieldCount; }
+        }
+        public override void VisitYieldStatement(YieldStatementSyntax node)
+        {
+            ++m_YieldCount;
+        }
+
+        private int m_YieldCount = 0;
+    }
     internal class CSharpRewriter : CSharpSyntaxRewriter
     {
         public override SyntaxNode VisitBlock(BlockSyntax node)
@@ -96,11 +118,15 @@ namespace RoslynTool
             var methodDecl = node.Parent as BaseMethodDeclarationSyntax;
             var accessorDecl = node.Parent as AccessorDeclarationSyntax;
             if (null != methodDecl) {
-                var sym = m_Model.GetDeclaredSymbol(methodDecl);
-                var fullName = SymbolTable.CalcFullNameWithTypeParameters(sym, true);
-                var newNode = TryInject(node, sym, fullName);
-                if (null != newNode)
-                    return newNode;
+                var yieldAnalysis = new YieldAnalysis();
+                yieldAnalysis.Visit(node);
+                if (yieldAnalysis.YieldCount <= 0) {
+                    var sym = m_Model.GetDeclaredSymbol(methodDecl);
+                    var fullName = SymbolTable.CalcFullNameWithTypeParameters(sym, true);
+                    var newNode = TryInject(node, sym, fullName);
+                    if (null != newNode)
+                        return newNode;
+                }
             } else if (null != accessorDecl) {
                 var sym = m_Model.GetDeclaredSymbol(accessorDecl);
                 var fullName = SymbolTable.CalcFullNameWithTypeParameters(sym, true);

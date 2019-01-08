@@ -22,8 +22,8 @@ namespace RoslynTool
     {
         internal HookInfo MemoryLog = null;
         internal HookInfo ProfilerSample = null;
-        internal HashSet<string> ExcludeAssemblies = new HashSet<string>();
-        internal HashSet<string> IncludeAssemblies = new HashSet<string>();
+        internal List<Regex> ExcludeAssemblies = new List<Regex>();
+        internal List<Regex> IncludeAssemblies = new List<Regex>();
         internal List<Regex> DontInjects = new List<Regex>();
         internal List<Regex> Injects = new List<Regex>();
     }
@@ -88,14 +88,12 @@ namespace RoslynTool
                                 }
                             } else if (mid == "ExcludeAssembly") {
                                 var r = cd.GetParamId(0);
-                                if (!injectInfo.ExcludeAssemblies.Contains(r)) {
-                                    injectInfo.ExcludeAssemblies.Add(r);
-                                }
+                                var regex = new Regex(r, RegexOptions.Compiled);
+                                injectInfo.ExcludeAssemblies.Add(regex);
                             } else if (mid == "IncludeAssembly") {
                                 var r = cd.GetParamId(0);
-                                if (!injectInfo.IncludeAssemblies.Contains(r)) {
-                                    injectInfo.IncludeAssemblies.Add(r);
-                                }
+                                var regex = new Regex(r, RegexOptions.Compiled);
+                                injectInfo.IncludeAssemblies.Add(regex);
                             } else if (mid == "DontInject") {
                                 var r = cd.GetParamId(0);
                                 var regex = new Regex(r, RegexOptions.Compiled);
