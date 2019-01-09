@@ -17,6 +17,7 @@ namespace RoslynTool
             try {
                 string file = "test.cs";
                 string outputDir = string.Empty;
+                string cfgPath = "hookrewriter.dsl";
                 List<string> macros = new List<string>();
                 List<string> undefMacros = new List<string>();
                 Dictionary<string, string> refByNames = new Dictionary<string, string>();
@@ -31,6 +32,14 @@ namespace RoslynTool
                                 string arg = args[i + 1];
                                 if (!arg.StartsWith("-")) {
                                     outputDir = arg;
+                                    ++i;
+                                }
+                            }
+                        } else if (0 == string.Compare(args[i], "-cfg", true)) {
+                            if (i < args.Length - 1) {
+                                string arg = args[i + 1];
+                                if (!arg.StartsWith("-")) {
+                                    cfgPath = arg;
                                     ++i;
                                 }
                             }
@@ -136,7 +145,7 @@ namespace RoslynTool
                         }
                     }
                 } else {
-                    Console.WriteLine("[Usage]:Cs2LuaRewriter [-out dir] [-d macro] [-u macro] [-refbyname dllname alias] [-refbypath dllpath alias] [-systemdllpath dllpath] [-src] csfile|csprojfile");
+                    Console.WriteLine("[Usage]:CSharpHookRewriter [-out dir] [-cfg path] [-d macro] [-u macro] [-refbyname dllname alias] [-refbypath dllpath alias] [-systemdllpath dllpath] [-src] csfile|csprojfile");
                     Console.WriteLine("\twhere:");
                     Console.WriteLine("\t\tmacro = c# macro define, used in your csharp code #if/#elif/#else/#endif etc.");
                     Console.WriteLine("\t\tdllname = dotnet system assembly name, referenced by your csharp code.");
@@ -150,7 +159,7 @@ namespace RoslynTool
                 }
                 if (File.Exists(file)) {
                     var stopwatch = Stopwatch.StartNew();
-                    var result = (int)CSharpProject.Process(file, outputDir, macros, undefMacros, refByNames, refByPaths, systemDllPath, outputResult, parallel);
+                    var result = (int)CSharpProject.Process(file, outputDir, cfgPath, macros, undefMacros, refByNames, refByPaths, systemDllPath, outputResult, parallel);
                     stopwatch.Stop();
                     Console.WriteLine("RunningTime: {0}s", stopwatch.Elapsed.TotalSeconds);
                     Environment.Exit(result);

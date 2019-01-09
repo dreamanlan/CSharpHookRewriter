@@ -23,7 +23,7 @@ namespace RoslynTool
     }
     public static class CSharpProject
     {
-        public static ExitCode Process(string srcFile, string outputDir, IList<string> macros, IList<string> undefMacros, IDictionary<string, string> _refByNames, IDictionary<string, string> _refByPaths, string systemDllPath, bool outputResult, bool parallel)
+        public static ExitCode Process(string srcFile, string outputDir, string cfgPath, IList<string> macros, IList<string> undefMacros, IDictionary<string, string> _refByNames, IDictionary<string, string> _refByPaths, string systemDllPath, bool outputResult, bool parallel)
         {
             if (string.IsNullOrEmpty(outputDir)) {
                 outputDir = "../rewrite";
@@ -47,6 +47,10 @@ namespace RoslynTool
             }
             if (!Directory.Exists(outputDir)) {
                 Directory.CreateDirectory(outputDir);
+            }
+            if (!Path.IsPathRooted(cfgPath)) {
+                cfgPath = Path.Combine(exepath, cfgPath);
+                cfgPath = Path.GetFullPath(cfgPath);
             }
 
             List<string> files = new List<string>();
@@ -221,7 +225,7 @@ namespace RoslynTool
             compilation = compilation.AddReferences(refs.ToArray());
             compilation = compilation.AddSyntaxTrees(trees.Values);
 
-            SymbolTable.Instance.Init(compilation, exepath);
+            SymbolTable.Instance.Init(compilation, cfgPath);
 
             using (StreamWriter sw = new StreamWriter(Path.Combine(logDir, "SemanticError.log"))) {
                 using (StreamWriter sw2 = new StreamWriter(Path.Combine(logDir, "SemanticWarning.log"))) {

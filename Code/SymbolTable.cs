@@ -49,7 +49,7 @@ namespace RoslynTool
             InitRecursively(nssym);
 
             Dsl.DslFile dslFile = new Dsl.DslFile();
-            if (dslFile.Load(Path.Combine(cfgPath, "hookrewriter.dsl"), (msg) => { Console.WriteLine(msg); })) {
+            if (dslFile.Load(cfgPath, (msg) => { Console.WriteLine(msg); })) {
                 foreach (var info in dslFile.DslInfos) {
                     var func = info.First;
                     var call = func.Call;
