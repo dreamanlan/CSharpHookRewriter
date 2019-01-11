@@ -26,6 +26,7 @@ namespace RoslynTool
         internal List<Regex> IncludeAssemblies = new List<Regex>();
         internal List<Regex> DontInjects = new List<Regex>();
         internal List<Regex> Injects = new List<Regex>();
+        internal List<Regex> AlwaysInjects = new List<Regex>();
     }
     internal class SymbolTable
     {
@@ -102,6 +103,10 @@ namespace RoslynTool
                                 var r = cd.GetParamId(0);
                                 var regex = new Regex(r, RegexOptions.Compiled);
                                 injectInfo.Injects.Add(regex);
+                            } else if (mid == "AlwaysInject") {
+                                var r = cd.GetParamId(0);
+                                var regex = new Regex(r, RegexOptions.Compiled);
+                                injectInfo.AlwaysInjects.Add(regex);
                             }
                         }
                     }

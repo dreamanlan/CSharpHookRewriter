@@ -143,35 +143,51 @@ namespace RoslynTool
                 HookInfo mlog = null;
                 HookInfo psample = null;
                 foreach (var info in m_InjectInfos) {
-                    bool exclude = false;
-                    foreach (var regex in info.DontInjects) {
+                    bool alwaysInclude = false;
+                    foreach (var regex in info.AlwaysInjects) {
                         if (regex.IsMatch(fullName)) {
-                            exclude = true;
+                            alwaysInclude = true;
                             break;
                         }
                     }
-                    if (!exclude) {
-                        bool include = false;
-                        if (info.Injects.Count <= 0) {
-                            include = true;
-                        } else {
-                            foreach (var regex in info.Injects) {
-                                if (regex.IsMatch(fullName)) {
-                                    include = true;
-                                    break;
-                                }
+                    if (alwaysInclude) {
+                        if (null != info.MemoryLog) {
+                            mlog = info.MemoryLog;
+                        }
+                        if (null != info.ProfilerSample) {
+                            psample = info.ProfilerSample;
+                        }
+                    } else {
+                        bool exclude = false;
+                        foreach (var regex in info.DontInjects) {
+                            if (regex.IsMatch(fullName)) {
+                                exclude = true;
+                                break;
                             }
                         }
-                        if (include) {
-                            if (null != info.MemoryLog) {
-                                CreateChecker checker = new CreateChecker(m_ProjectFileName, m_Model);
-                                checker.Visit(node);
-                                if (checker.ExistCreate) {
-                                    mlog = info.MemoryLog;
+                        if (!exclude) {
+                            bool include = false;
+                            if (info.Injects.Count <= 0) {
+                                include = true;
+                            } else {
+                                foreach (var regex in info.Injects) {
+                                    if (regex.IsMatch(fullName)) {
+                                        include = true;
+                                        break;
+                                    }
                                 }
                             }
-                            if (null != info.ProfilerSample) {
-                                psample = info.ProfilerSample;
+                            if (include) {
+                                if (null != info.MemoryLog) {
+                                    CreateChecker checker = new CreateChecker(m_ProjectFileName, m_Model);
+                                    checker.Visit(node);
+                                    if (checker.ExistCreate) {
+                                        mlog = info.MemoryLog;
+                                    }
+                                }
+                                if (null != info.ProfilerSample) {
+                                    psample = info.ProfilerSample;
+                                }
                             }
                         }
                     }
