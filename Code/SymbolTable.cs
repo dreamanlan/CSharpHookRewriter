@@ -76,7 +76,7 @@ namespace RoslynTool
                                     var m2 = cd.GetParamId(2);
                                     injectInfo.MemoryLog = new HookInfo { FullClassName = c, BeginMethodName = m1, EndMethodName = m2 };
                                 } else {
-                                    injectInfo.MemoryLog = new HookInfo { FullClassName = "Utility", BeginMethodName = "MemoryLogBegin", EndMethodName = "MemoryLogEnd" };
+                                    injectInfo.MemoryLog = new HookInfo { FullClassName = "MemoryAndCallHook", BeginMethodName = "MemoryLogBegin", EndMethodName = "MemoryLogEnd" };
                                 }
                             } else if (mid == "InjectProfilerSample") {
                                 if (cd.GetParamNum() >= 3) {
