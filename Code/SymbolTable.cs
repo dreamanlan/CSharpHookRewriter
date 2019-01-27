@@ -27,6 +27,7 @@ namespace RoslynTool
         internal List<Regex> DontInjects = new List<Regex>();
         internal List<Regex> Injects = new List<Regex>();
         internal List<Regex> AlwaysInjects = new List<Regex>();
+        internal Dictionary<string, List<string>> MemoryLogArgs = new Dictionary<string, List<string>>();
     }
     internal class SymbolTable
     {
@@ -107,6 +108,14 @@ namespace RoslynTool
                                 var r = cd.GetParamId(0);
                                 var regex = new Regex(r, RegexOptions.Compiled);
                                 injectInfo.AlwaysInjects.Add(regex);
+                            } else if (mid == "MemoryLogArgs") {
+                                var key = cd.GetParamId(0);
+                                var args = new List<string>();
+                                for (int i = 1; i < cd.GetParamNum(); ++i) {
+                                    var arg = cd.GetParamId(i);
+                                    args.Add(arg);
+                                }
+                                injectInfo.MemoryLogArgs[key] = args;
                             }
                         }
                     }

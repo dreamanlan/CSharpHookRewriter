@@ -142,6 +142,7 @@ namespace RoslynTool
             if (null != m_InjectInfos) {
                 HookInfo mlog = null;
                 HookInfo psample = null;
+                List<string> margs = null;
                 foreach (var info in m_InjectInfos) {
                     bool alwaysInclude = false;
                     foreach (var regex in info.AlwaysInjects) {
@@ -183,6 +184,7 @@ namespace RoslynTool
                                     checker.Visit(node);
                                     if (checker.ExistCreate) {
                                         mlog = info.MemoryLog;
+                                        info.MemoryLogArgs.TryGetValue(fullName, out margs);
                                     }
                                 }
                                 if (null != info.ProfilerSample) {
@@ -194,7 +196,7 @@ namespace RoslynTool
                 }
                 if (null != mlog || null != psample) {
                     if (null != mlog) {
-                        node = InjectMemoryLog(node, sym, fullName, mlog);
+                        node = InjectMemoryLog(node, sym, fullName, mlog, margs);
                     }
                     if (null != psample) {
                         node = InjectProfilerSample(node, sym, fullName, psample);
@@ -204,7 +206,7 @@ namespace RoslynTool
             }
             return null;
         }
-        private BlockSyntax InjectMemoryLog(BlockSyntax node, IMethodSymbol sym, string fullName, HookInfo hookInfo)
+        private BlockSyntax InjectMemoryLog(BlockSyntax node, IMethodSymbol sym, string fullName, HookInfo hookInfo, List<string> args)
         {
             var firstLeading = node.GetLeadingTrivia().ToFullString();
             var txt = node.ToFullString();            
@@ -224,7 +226,16 @@ namespace RoslynTool
             sb.AppendLine();
             ++indent;
 
-            sb.AppendFormat("{0}{1}.{2}(\"{3}\");", GetIndent(leading, indent), hookInfo.FullClassName, hookInfo.BeginMethodName, fullName);
+            if (null == args || args.Count <= 0) {
+                sb.AppendFormat("{0}{1}.{2}(\"{3}\");", GetIndent(leading, indent), hookInfo.FullClassName, hookInfo.BeginMethodName, fullName);
+            } else {
+                sb.AppendFormat("{0}{1}.{2}(\"{3}\"", GetIndent(leading, indent), hookInfo.FullClassName, hookInfo.BeginMethodName, fullName);
+                foreach (var arg in args) {
+                    sb.Append(", ");
+                    sb.Append(arg);
+                }
+                sb.Append(");");
+            }
             sb.AppendLine();
             sb.Append(txt);
 
