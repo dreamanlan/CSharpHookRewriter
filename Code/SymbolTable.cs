@@ -53,11 +53,13 @@ namespace RoslynTool
             Dsl.DslFile dslFile = new Dsl.DslFile();
             if (dslFile.Load(cfgPath, (msg) => { Console.WriteLine(msg); })) {
                 foreach (var info in dslFile.DslInfos) {
-                    var func = info.First;
-                    var call = func.Call;
                     var fid = info.GetId();
                     if (fid != "project")
                         continue;
+                    var func = info as Dsl.FunctionData;
+                    if (null == func)
+                        continue;
+                    var call = func.Call;
                     var cid = call.GetParamId(0);
                     List<InjectInfo> list;
                     if (!m_InjectInfos.TryGetValue(cid, out list)) {
