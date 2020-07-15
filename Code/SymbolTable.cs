@@ -59,7 +59,9 @@ namespace RoslynTool
                     var func = info as Dsl.FunctionData;
                     if (null == func)
                         continue;
-                    var call = func.Call;
+                    var call = func;
+                    if (func.IsHighOrder)
+                        call = func.LowerOrderFunction;
                     var cid = call.GetParamId(0);
                     List<InjectInfo> list;
                     if (!m_InjectInfos.TryGetValue(cid, out list)) {
@@ -68,8 +70,8 @@ namespace RoslynTool
                     }
                     var injectInfo = new InjectInfo();
                     list.Add(injectInfo);
-                    foreach (var comp in func.Statements) {
-                        var cd = comp as Dsl.CallData;
+                    foreach (var comp in func.Params) {
+                        var cd = comp as Dsl.FunctionData;
                         if (null != cd) {
                             var mid = cd.GetId();
                             if (mid == "InjectMemoryLog") {
